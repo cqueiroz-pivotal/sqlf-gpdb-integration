@@ -1,9 +1,11 @@
 package com.gopivotal.poc.sqlfgpdb;
 
+import com.jolbox.bonecp.BoneCP;
+import com.jolbox.bonecp.BoneCPConfig;
 import com.vmware.sqlfire.callbacks.AsyncEventListener;
 import com.vmware.sqlfire.callbacks.Event;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+//import com.zaxxer.hikari.HikariConfig;
+//import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,8 @@ public class MyBatchListener implements AsyncEventListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MyBatchListener.class);
 
-    private HikariDataSource ds;
+//    private HikariDataSource ds;
+    private BoneCP connectionPool;
     private final Properties p = new Properties();
 
     private BufferedWriter pipeWriter;
@@ -48,7 +51,7 @@ public class MyBatchListener implements AsyncEventListener {
 
                 try{
 
-                    conn = ds.getConnection();
+                    conn = connectionPool.getConnection();
                     pstm = conn.prepareStatement(sql);
                     int i = pstm.executeUpdate();
                     LOGGER.debug("if i  > 0 data loaded into GPDB: " + i);
@@ -120,8 +123,8 @@ public class MyBatchListener implements AsyncEventListener {
     public void close() {
 
         try {
-
-            ds.shutdown();
+            connectionPool.shutdown();
+//            ds.shutdown();
             executorService.shutdown();
             executorService.awaitTermination(10L, TimeUnit.SECONDS);
             pipeWriter.close();
@@ -163,15 +166,32 @@ public class MyBatchListener implements AsyncEventListener {
     @Override
     public void start() {
 
-        HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
-        config.setMaximumPoolSize(1);
-        config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
-        config.setPoolName("gpdbCP");
-        config.addDataSourceProperty("url", p.getProperty("connectionURL"));
-        config.addDataSourceProperty("user", p.getProperty("username"));
-        config.addDataSourceProperty("password", p.getProperty("password"));
+        try {
+            Class.forName("org.postgresql.Driver");
+            BoneCPConfig config = new BoneCPConfig();
 
-        ds = new HikariDataSource(config);
+            config.setJdbcUrl(p.getProperty("connectionURL"));
+            config.setUsername(p.getProperty("username"));
+            config.setPassword(p.getProperty("password"));
+            config.setMinConnectionsPerPartition(1);
+            config.setMaxConnectionsPerPartition(1);
+            config.setPartitionCount(1);
+            connectionPool = new BoneCP(config); // setup the connection pool
+
+        } catch (ClassNotFoundException e) {
+            LOGGER.error("Error loading Driver",e);
+        } catch (SQLException e){
+            LOGGER.error("Error starting BoneCP pool",e);
+        }
+
+
+//        config.setMaximumPoolSize(1);
+//        config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+//        config.setPoolName("gpdbCP");
+//
+//        config.addDataSourceProperty("user", p.getProperty("username"));
+//        config.addDataSourceProperty("password", p.getProperty("password"));
+//
+//        ds = new HikariDataSource(config);
     }
 }

@@ -1,9 +1,10 @@
 package com.gopivotal.poc.sqlfgpdb;
 
+import com.jolbox.bonecp.BoneCP;
+import com.jolbox.bonecp.BoneCPConfig;
 import com.vmware.sqlfire.callbacks.Event;
 import com.vmware.sqlfire.callbacks.EventCallback;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,8 @@ public class MyProxyDispatcher implements EventCallback {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MyProxyDispatcher.class);
 
-    private HikariDataSource ds;
+//    private HikariDataSource ds;
+    private BoneCP connectionPool;
     private final Properties p = new Properties();
 
     /** counter to choose next proxy table*/
@@ -40,7 +42,7 @@ public class MyProxyDispatcher implements EventCallback {
         PreparedStatement pstm = null;
 
         try{
-            conn = ds.getConnection();
+            conn = connectionPool.getConnection();
 
             switch (event.getType()) {
                 case AFTER_INSERT:
@@ -109,7 +111,7 @@ public class MyProxyDispatcher implements EventCallback {
 
     @Override
     public void close() throws SQLException {
-        ds.shutdown();
+        connectionPool.shutdown();
 
     }
 
@@ -127,20 +129,36 @@ public class MyProxyDispatcher implements EventCallback {
             StringReader sr = new StringReader(sb.toString());
             p.load(sr);
 
-            HikariConfig config = new HikariConfig();
-            config.setMinimumPoolSize(32);
-            config.setMaximumPoolSize(64);
-            config.setDataSourceClassName("com.vmware.sqlfire.internal.jdbc.ClientDataSource");
-            config.setPoolName("sqlfCP");
-            config.addDataSourceProperty("url", p.getProperty("connectionURL"));
-            config.addDataSourceProperty("user", p.getProperty("username"));
-            config.addDataSourceProperty("password", p.getProperty("password"));
+            Class.forName("com.vmware.sqlfire.jdbc.EmbeddedDriver");
+            BoneCPConfig config = new BoneCPConfig();
 
-            ds = new HikariDataSource(config);
+            config.setJdbcUrl(p.getProperty("connectionURL"));
+            config.setUsername(p.getProperty("username"));
+            config.setPassword(p.getProperty("password"));
+            config.setMinConnectionsPerPartition(32);
+            config.setMaxConnectionsPerPartition(64);
+            config.setPartitionCount(1);
+            connectionPool = new BoneCP(config); // setup the connection pool
+
+//            HikariConfig config = new HikariConfig();
+//            config.setMinimumPoolSize(32);
+//            config.setMaximumPoolSize(64);
+//            config.setDataSourceClassName("com.vmware.sqlfire.internal.jdbc.ClientDataSource");
+//            config.setPoolName("sqlfCP");
+//            config.addDataSourceProperty("url", p.getProperty("connectionURL"));
+//            config.addDataSourceProperty("user", p.getProperty("username"));
+//            config.addDataSourceProperty("password", p.getProperty("password"));
+//
+//            ds = new HikariDataSource(config);
 
 
         } catch (IOException e) {
             LOGGER.error("Error parsing configuration input:", e);
+        } catch (SQLException e){
+            LOGGER.error("Error starting pool", e);
+
+        }catch (ClassNotFoundException e){
+            LOGGER.error("Error finding class: com.vmware.sqlfire.jdbc.EmbeddedDriver", e);
         }
     }
 }
