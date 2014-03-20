@@ -148,17 +148,6 @@ public class DataBatchListener implements AsyncEventListener {
             StringReader sr = new StringReader(sb.toString());
             p.load(sr);
 
-        } catch (IOException e) {
-            LOGGER.error("Error parsing configuration input:", e);
-        }
-
-
-    }
-
-    @Override
-    public void start() {
-
-        try {
             Class.forName("org.postgresql.Driver");
             BoneCPConfig config = new BoneCPConfig();
 
@@ -172,11 +161,23 @@ public class DataBatchListener implements AsyncEventListener {
 
             LOGGER.info("connectionPool started!!");
 
-        } catch (ClassNotFoundException e) {
+
+
+        } catch (IOException e) {
+            LOGGER.error("Error parsing configuration input:", e);
+        }catch (ClassNotFoundException e) {
             LOGGER.error("Error loading Driver",e);
         } catch (SQLException e){
             LOGGER.error("Error starting BoneCP pool",e);
         }
+
+
+    }
+
+    @Override
+    public void start() {
+
+
 
     }
 }
