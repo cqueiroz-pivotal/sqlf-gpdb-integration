@@ -15,14 +15,18 @@
             <name>SQLFire Repository</name>
             <url>http://dist.gemstone.com/maven/release</url>
         </repository>
+        <repository>
+            <id>gemstone</id>
+            <url>http://dist.gemstone.com.s3.amazonaws.com/maven/release/</url>
+        </repository>
     </repositories>
 
     <dependencies>
 
         <dependency>
-            <groupId>com.vmware.sqlfire</groupId>
-            <artifactId>sqlfire</artifactId>
-            <version>1.1.2</version>
+            <groupId>com.pivotal.gemfirexd</groupId>
+            <artifactId>gemfirexd</artifactId>
+            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>postgresql</groupId>

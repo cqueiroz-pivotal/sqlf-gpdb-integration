@@ -1,11 +1,10 @@
 package com.gopivotal.poc.sqlfgpdb;
 
 import com.jolbox.bonecp.BoneCP;
+
 import com.jolbox.bonecp.BoneCPConfig;
-import com.vmware.sqlfire.callbacks.AsyncEventListener;
-import com.vmware.sqlfire.callbacks.Event;
-//import com.zaxxer.hikari.HikariConfig;
-//import com.zaxxer.hikari.HikariDataSource;
+import com.pivotal.gemfirexd.callbacks.AsyncEventListener;
+import com.pivotal.gemfirexd.callbacks.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,32 +15,87 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
-import static com.vmware.sqlfire.callbacks.Event.Type;
 
 /**
  * User: cq
  * Date: 11/03/2014
  * Time: 2:38 AM
  */
-public class MyBatchListener implements AsyncEventListener {
+public class DataBatchListener implements AsyncEventListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MyBatchListener.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataBatchListener.class);
 
-//    private HikariDataSource ds;
+
     private BoneCP connectionPool;
     private final Properties p = new Properties();
 
     private BufferedWriter pipeWriter;
-    private final ExecutorService executorService = Executors.newFixedThreadPool(1);
 
     @Override
     public boolean processEvents(List<Event> events) {
 
-        executorService.execute(new Runnable() {
+        startLoadingData();
+
+        try {
+
+            pipeWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(p.getProperty("pipeFileLocation"))));
+            LOGGER.info("pipeWriter started!!");
+
+        } catch (FileNotFoundException e) {
+            LOGGER.error("Error starting pipe:", e);
+        }
+
+        try {
+            int i = 0;
+            for(Event event : events){
+                ResultSet rs = event.getNewRowsAsResultSet();
+                switch(event.getType()){
+
+                    case AFTER_INSERT:
+                    case AFTER_UPDATE:
+                        try {
+                            String data = rs.getString(1);
+                            pipeWriter.write(data);
+                            pipeWriter.newLine();
+                            i++;
+                        } catch (SQLException e) {
+                            LOGGER.error("Error doing single Insert/Update: ",e);
+                        } catch(IOException e){
+                            LOGGER.error("Error writing to pipe: ",e);
+                        }finally{
+                            try {
+                                if(rs!=null)
+                                    rs.close();
+                            } catch (SQLException e) {
+                                LOGGER.error("Error closing RS ",e);
+                            }
+                        }
+
+                    default:
+                        break;
+                }
+            }
+
+            pipeWriter.flush();
+            pipeWriter.close();
+
+            LOGGER.info("Events flushed into pipe: " + i);
+
+            return true;
+
+        } catch (IOException e) {
+            LOGGER.error("Error writing to pipe: ", e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Starts loading data into GPDB.
+     */
+    private void startLoadingData() {
+        Thread loadData = new Thread(new Runnable() {
             @Override
             public void run() {
                 Connection conn = null;
@@ -70,77 +124,17 @@ public class MyBatchListener implements AsyncEventListener {
 
             }
         });
-
-        try {
-            int i = 0;
-            for(Event event : events){
-                ResultSet rs = event.getNewRowsAsResultSet();
-                switch(event.getType()){
-
-                    case AFTER_INSERT:
-                    case AFTER_UPDATE:
-                        try {
-                            String data = rs.getString(1);
-                            pipeWriter.write(data);
-                            pipeWriter.newLine();
-                            i++;
-                        } catch (SQLException e) {
-                            LOGGER.error("Error doing single Insert/Update: ",e);
-                        } catch(IOException e){
-                            LOGGER.error("Error writing to pipe: ",e);
-                        }finally{
-                            try {
-                                if(rs!=null)
-                                    rs.close();
-                            } catch (SQLException e) {
-                                LOGGER.error("Error closing RS ",e);
-                            }
-                        }
-
-                    case BULK_INSERT:
-                        break;
-
-                    case AFTER_DELETE:
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-
-            pipeWriter.flush();
-            LOGGER.debug("Events flushed into pipe: " + i);
-
-            return true;
-        } catch (IOException e) {
-            LOGGER.error("Error writing to pipe: ", e);
-        }
-
-        return false;
+        loadData.start();
     }
 
     @Override
     public void close() {
 
-        try {
-            connectionPool.shutdown();
-//            ds.shutdown();
-            executorService.shutdown();
-            executorService.awaitTermination(10L, TimeUnit.SECONDS);
-            pipeWriter.close();
-
-        } catch (IOException e) {
-            LOGGER.error("Error closing pipeWriter: " + p.getProperty("pipeFileLocation"),e);
-
-        } catch (InterruptedException e){
-
-            LOGGER.error("Error closing executorService: ",e);
-        }
+        connectionPool.shutdown();
     }
 
     @Override
     public void init(String s) {
-
 
         try {
 
@@ -152,9 +146,6 @@ public class MyBatchListener implements AsyncEventListener {
 
             StringReader sr = new StringReader(sb.toString());
             p.load(sr);
-
-            pipeWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(p.getProperty("pipeFileLocation"))));
-
 
         } catch (IOException e) {
             LOGGER.error("Error parsing configuration input:", e);
@@ -178,20 +169,13 @@ public class MyBatchListener implements AsyncEventListener {
             config.setPartitionCount(1);
             connectionPool = new BoneCP(config); // setup the connection pool
 
+            LOGGER.info("connectionPool started!!");
+
         } catch (ClassNotFoundException e) {
             LOGGER.error("Error loading Driver",e);
         } catch (SQLException e){
             LOGGER.error("Error starting BoneCP pool",e);
         }
 
-
-//        config.setMaximumPoolSize(1);
-//        config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
-//        config.setPoolName("gpdbCP");
-//
-//        config.addDataSourceProperty("user", p.getProperty("username"));
-//        config.addDataSourceProperty("password", p.getProperty("password"));
-//
-//        ds = new HikariDataSource(config);
     }
 }
