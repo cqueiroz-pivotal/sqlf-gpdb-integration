@@ -18,6 +18,7 @@ import java.util.Properties;
 
 
 /**
+ * Code based on Charlie Black demo code.
  * User: cq
  * Date: 11/03/2014
  * Time: 2:38 AM
