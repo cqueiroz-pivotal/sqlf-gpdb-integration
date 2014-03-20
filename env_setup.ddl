@@ -30,7 +30,7 @@ call SYS.ADD_LISTENER('ERD_LISTENER',
 CREATE ASYNCEVENTLISTENER dataProxy_1
 (
 LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
-INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin'
+INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1'
 MANUALSTART false
 ENABLEBATCHCONFLATION false
 BATCHSIZE 100000
@@ -43,7 +43,7 @@ SERVER GROUPS ( dataProxy_1 );
 CREATE ASYNCEVENTLISTENER dataProxy_2
 (
   LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
-   INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin'
+   INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1'
   MANUALSTART false
   ENABLEBATCHCONFLATION false
   BATCHSIZE 100000
