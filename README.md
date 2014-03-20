@@ -1,17 +1,10 @@
-sqlf-gpdb-integration
+gemfirexd-gpdb-integration
 =====================
 
-To compile: mvn clean install
+To compile: mvn clean package
 
-To use it on sqlfire: 
+To use it on gemfirexd:
 
-- copy target/sqlf-gpdb-integration.jar to sqlfire/ext-lib folder. 
-- create table using:
-call SYS.ADD_LISTENER('%%LISTENER NAME %%',
-     'APP','%%TABLE NAME%%',
-     'com.gopivotal.poc.sqlfgpdb.MyProxyDispatcher',     
-     'connectionurl=jdbc:sqlfire:|numproxies=4|proxyTablePrefix=tableProxy|username=app|password=app',
-      null);
-      
-- create async listener class name: com.gopivotal.poc.sqlfgpdb.MyBatchListener
+- copy target/sqlf-gpdb-integration.jar to gemfirexd/ext-lib folder.
+- run DDL env_setup.ddl
 
