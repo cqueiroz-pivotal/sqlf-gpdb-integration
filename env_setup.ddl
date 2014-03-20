@@ -34,7 +34,7 @@ INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableN
 MANUALSTART false
 ENABLEBATCHCONFLATION false
 BATCHSIZE 100000
-BATCHTIMEINTERVAL 60000
+BATCHTIMEINTERVAL 6000
 ENABLEPERSISTENCE false
 MAXQUEUEMEMORY 100
 )
@@ -47,11 +47,11 @@ CREATE ASYNCEVENTLISTENER dataProxy_2
   MANUALSTART false
   ENABLEBATCHCONFLATION false
   BATCHSIZE 100000
-  BATCHTIMEINTERVAL 60000
+  BATCHTIMEINTERVAL 6000
   ENABLEPERSISTENCE false
   MAXQUEUEMEMORY 100
 )
-  SERVER GROUPS ( dataProxy_2 );
+  SERVER GROUPS ( dataProxy_1 );
 
 
 create table dataProxy_1
@@ -63,7 +63,9 @@ insert into dataProxy_1 values (1,'hello');
 
 create table dataProxy_2
 ( k integer, value varchar(500))
-  ASYNCEVENTLISTENER ( dataProxy_2 ) SERVER GROUPS ( dataProxy_2 ) ;
+  ASYNCEVENTLISTENER ( dataProxy_2 ) SERVER GROUPS ( dataProxy_1 ) ;
 
 insert into dataProxy_2 values (1,'hello');
 ----------------------------------------------------------------------------------------------------
+insert into dataProxy_1 values (1,'hello');
+insert into dataProxy_2 values (1,'hello');
