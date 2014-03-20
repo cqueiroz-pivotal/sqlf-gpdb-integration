@@ -1,4 +1,4 @@
-package com.gopivotal.poc.sqlfgpdb;
+package com.gopivotal.poc.gfxd_gpdb;
 
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;

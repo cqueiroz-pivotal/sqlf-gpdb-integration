@@ -1,5 +1,5 @@
 gemfirexd-gpdb-integration
-=====================
+=========================
 
 To compile: mvn clean package
 

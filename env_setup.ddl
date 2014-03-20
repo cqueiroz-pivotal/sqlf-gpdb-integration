@@ -21,7 +21,7 @@ SERVER GROUPS (POC)
 
 call SYS.ADD_LISTENER('ERD_LISTENER',
      'APP','ERD_DATA',
-     'demo.vmware.sqlfire.greenplum.MultiHubProxyDispatcher',
+     'com.gopivotal.poc.gfxd_gpdb.DataDispatcher',
      'connectionURL=jdbc:sqlfire:|numproxies=2|proxyTablePrefix=dataProxy|username=app|password=app',
       null);
 
@@ -29,7 +29,7 @@ call SYS.ADD_LISTENER('ERD_LISTENER',
 
 CREATE ASYNCEVENTLISTENER dataProxy_1
 (
-LISTENERCLASS 'demo.vmware.sqlfire.greenplum.MicroBatchListener'
+LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
 INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin'
 MANUALSTART false
 ENABLEBATCHCONFLATION false
@@ -42,7 +42,7 @@ SERVER GROUPS ( dataProxy_1 );
 
 CREATE ASYNCEVENTLISTENER dataProxy_2
 (
-  LISTENERCLASS 'demo.vmware.sqlfire.greenplum.MicroBatchListener'
+  LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
    INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin'
   MANUALSTART false
   ENABLEBATCHCONFLATION false
