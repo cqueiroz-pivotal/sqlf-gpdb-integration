@@ -22,7 +22,7 @@ CREATE TABLE "APP"."ERD_DATA"
 call SYS.ADD_LISTENER('ERD_LISTENER',
                       'APP','ERD_DATA',
                       'com.gopivotal.poc.gfxd_gpdb.DataDispatcher',
-                      'connectionURL=jdbc:sqlfire:|numproxies=1|proxyTablePrefix=dataProxy|username=app|password=app',
+                      'connectionURL=jdbc:sqlfire:|numproxies=1|proxyTablePrefix=dataProxy|username=app|password=app|minConn=32|maxConn=64',
                       null);
 
 
@@ -30,7 +30,7 @@ call SYS.ADD_LISTENER('ERD_LISTENER',
 CREATE ASYNCEVENTLISTENER dataProxy_1
 (
 LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
-INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1'
+INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1|minConn=32|maxConn=64'
 MANUALSTART false
 ENABLEBATCHCONFLATION false
 BATCHSIZE 100000
@@ -50,7 +50,7 @@ insert into dataProxy_1 values (1,'hello');
 CREATE ASYNCEVENTLISTENER dataProxy_2
 (
   LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
-   INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1'
+   INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1|minConn=32|maxConn=64'
   MANUALSTART false
   ENABLEBATCHCONFLATION false
   BATCHSIZE 100000

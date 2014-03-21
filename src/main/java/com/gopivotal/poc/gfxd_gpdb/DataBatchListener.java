@@ -263,8 +263,8 @@ public class DataBatchListener implements AsyncEventListener {
             gfxdConfig.setJdbcUrl(p.getProperty("gfxdConnectionURL"));//("jdbc:sqlfire:");
             gfxdConfig.setUsername(p.getProperty("gfxdUserName"));//"APP");
             gfxdConfig.setPassword(p.getProperty("gfxdPassword"));
-            gfxdConfig.setMinConnectionsPerPartition(1);
-            gfxdConfig.setMaxConnectionsPerPartition(1);
+            gfxdConfig.setMinConnectionsPerPartition(Integer.parseInt(p.getProperty("minConn")));
+            gfxdConfig.setMaxConnectionsPerPartition(Integer.parseInt(p.getProperty("maxConn")));
             gfxdConfig.setPartitionCount(1);
             gfxdConnectionPool = new BoneCP(gfxdConfig); // setup the gfxd connection// pool
             delPattern = p.getProperty("delPattern");//"delete from app.erd_data where ERD_2='{1}' ";

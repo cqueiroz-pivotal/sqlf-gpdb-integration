@@ -126,8 +126,8 @@ public class DataDispatcher implements EventCallback {
             config.setJdbcUrl(p.getProperty("connectionURL"));
             config.setUsername(p.getProperty("username"));
             config.setPassword(p.getProperty("password"));
-            config.setMinConnectionsPerPartition(32);
-            config.setMaxConnectionsPerPartition(64);
+            config.setMinConnectionsPerPartition(Integer.parseInt(p.getProperty("minConn")));
+            config.setMaxConnectionsPerPartition(Integer.parseInt(p.getProperty("maxConn")));
             config.setPartitionCount(1);
             connectionPool = new BoneCP(config); // setup the connection pool
 
