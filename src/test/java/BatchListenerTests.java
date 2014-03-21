@@ -14,7 +14,7 @@ public class BatchListenerTests {
 
     @Test
     public void testLoadConfig() throws IOException{
-        String s = "pipeFileLocation=/home/gpadmin/flights.pipe|extTableName=ext_flights|destTableName=app.flights|connectionURL=jdbc:postgresql://mdw:5440/airlines|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2='{1}'|whereClausePostions=1";
+        String s = "pipeFileLocation=/home/gpadmin/flights.pipe|extTableName=ext_flights|destTableName=app.flights|connectionURL=jdbc:postgresql://mdw:5440/airlines|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2='{1}'|stringPos=1";
         Properties p = new Properties();
         StringBuilder sb = new StringBuilder();
         for(String property : s.split("\\|")){
@@ -36,7 +36,7 @@ public class BatchListenerTests {
         Assert.assertTrue(p.containsKey("gfxdUserName"));
         Assert.assertTrue(p.containsKey("gfxdPassword"));
         Assert.assertTrue(p.containsKey("delPattern"));
-        Assert.assertTrue(p.containsKey("whereClausePostions"));
+        Assert.assertTrue(p.containsKey("stringPos"));
 
 
         Assert.assertEquals("/home/gpadmin/flights.pipe",p.getProperty("pipeFileLocation"));
@@ -51,7 +51,7 @@ public class BatchListenerTests {
         Assert.assertEquals("app",p.getProperty("gfxdUserName"));
         Assert.assertEquals("app",p.getProperty("gfxdPassword"));
         Assert.assertEquals("delete from app.erd_data where ERD_2='{1}'",p.getProperty("delPattern"));
-        Assert.assertEquals("1",p.getProperty("whereClausePostions"));
+        Assert.assertEquals("1",p.getProperty("stringPos"));
 
 
 

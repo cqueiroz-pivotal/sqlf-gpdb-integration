@@ -142,11 +142,12 @@ public class DataBatchListener implements AsyncEventListener {
 
     private void clearMainTable(List<Event> events) {
         Connection connection = null;
-        PreparedStatement pstm = null;
+        Statement stm = null;
         ResultSet rs = null;
 
         try {
             connection = gfxdConnectionPool.getConnection();
+            stm = connection.createStatement();
 
             for (Event event : events) {
                 rs = event.getNewRowsAsResultSet();
@@ -157,9 +158,8 @@ public class DataBatchListener implements AsyncEventListener {
 
                         String data = rs.getString(1);
                         String delSQL = prepareSQL(data);
-                        pstm = connection.prepareStatement(delSQL);
                         if (null != delSQL)
-                            pstm.addBatch(delSQL);
+                            stm.addBatch(delSQL);
 
                     default:
                         break;
@@ -168,9 +168,12 @@ public class DataBatchListener implements AsyncEventListener {
                 rs.close();
             }
 
-            pstm.executeBatch();
+            int[] results = stm.executeBatch();
+
             connection.commit();
 
+            int resultSize = results == null ? 0 : results.length;
+            LOGGER.info("result size is :" + resultSize);
 
         } catch (SQLException e1) {
 
@@ -178,7 +181,7 @@ public class DataBatchListener implements AsyncEventListener {
             try {
                 connection.rollback();
             } catch (SQLException e) {
-
+                LOGGER.error("SQLError:" + e.getMessage());
             }
 
         } finally {
@@ -243,18 +246,18 @@ public class DataBatchListener implements AsyncEventListener {
             StringReader sr = new StringReader(sb.toString());
             p.load(sr);
 
-            Class.forName("org.postgresql.Driver");
-            BoneCPConfig config = new BoneCPConfig();
-
-            config.setJdbcUrl(p.getProperty("connectionURL"));
-            config.setUsername(p.getProperty("username"));
-            config.setPassword(p.getProperty("password"));
-            config.setMinConnectionsPerPartition(1);
-            config.setMaxConnectionsPerPartition(1);
-            config.setPartitionCount(1);
-            connectionPool = new BoneCP(config); // setup the connection pool
-
-            LOGGER.info("connectionPool started!!");
+//            Class.forName("org.postgresql.Driver");
+//            BoneCPConfig config = new BoneCPConfig();
+//
+//            config.setJdbcUrl(p.getProperty("connectionURL"));
+//            config.setUsername(p.getProperty("username"));
+//            config.setPassword(p.getProperty("password"));
+//            config.setMinConnectionsPerPartition(1);
+//            config.setMaxConnectionsPerPartition(1);
+//            config.setPartitionCount(1);
+//            connectionPool = new BoneCP(config); // setup the connection pool
+//
+//            LOGGER.info("connectionPool started!!");
 
             BoneCPConfig gfxdConfig = new BoneCPConfig();
             gfxdConfig.setJdbcUrl(p.getProperty("gfxdConnectionURL"));//("jdbc:sqlfire:");
@@ -273,10 +276,10 @@ public class DataBatchListener implements AsyncEventListener {
 
         } catch (IOException e) {
             LOGGER.error("Error parsing configuration input:", e);
-        }catch (ClassNotFoundException e) {
-            LOGGER.error("Error loading Driver",e);
-        } catch (SQLException e){
+        }catch (SQLException e){
             LOGGER.error("Error starting BoneCP pool",e);
+        }catch(Exception e){
+            LOGGER.error("Error starting pools/parsing configuration",e);
         }
 
 

@@ -15,14 +15,14 @@ CREATE TABLE "APP"."ERD_DATA"
    PRIMARY KEY (ERD_2)
 ) PARTITION BY COLUMN (ERD_2)
 REDUNDANCY 0
-SERVER GROUPS (POC)
+SERVER GROUPS (POC);
 
 
 
 call SYS.ADD_LISTENER('ERD_LISTENER',
      'APP','ERD_DATA',
      'com.gopivotal.poc.gfxd_gpdb.DataDispatcher',
-     'connectionURL=jdbc:sqlfire:|numproxies=2|proxyTablePrefix=dataProxy|username=app|password=app',
+     'connectionURL=jdbc:sqlfire:|numproxies=1|proxyTablePrefix=dataProxy|username=app|password=app',
       null);
 
 
@@ -30,7 +30,7 @@ call SYS.ADD_LISTENER('ERD_LISTENER',
 CREATE ASYNCEVENTLISTENER dataProxy_1
 (
 LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
-INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1'
+INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2='{1}'|whereClausePostions=1'
 MANUALSTART false
 ENABLEBATCHCONFLATION false
 BATCHSIZE 100000
@@ -43,7 +43,7 @@ SERVER GROUPS ( poc );
 CREATE ASYNCEVENTLISTENER dataProxy_2
 (
   LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
-   INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1'
+   INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2='{1}'|whereClausePostions=1'
   MANUALSTART false
   ENABLEBATCHCONFLATION false
   BATCHSIZE 100000
