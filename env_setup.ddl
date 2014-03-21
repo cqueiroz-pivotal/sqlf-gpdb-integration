@@ -38,7 +38,7 @@ BATCHTIMEINTERVAL 6000
 ENABLEPERSISTENCE false
 MAXQUEUEMEMORY 100
 )
-SERVER GROUPS ( dataProxy_1 );
+SERVER GROUPS ( poc );
 
 CREATE ASYNCEVENTLISTENER dataProxy_2
 (
@@ -51,19 +51,19 @@ CREATE ASYNCEVENTLISTENER dataProxy_2
   ENABLEPERSISTENCE false
   MAXQUEUEMEMORY 100
 )
-  SERVER GROUPS ( dataProxy_1 );
+  SERVER GROUPS ( poc );
 
 
 create table dataProxy_1
   ( k integer, value varchar(500))
- ASYNCEVENTLISTENER ( dataProxy_1 ) SERVER GROUPS ( dataProxy_1 ) ;
+ ASYNCEVENTLISTENER ( dataProxy_1 ) SERVER GROUPS ( poc ) ;
 
 insert into dataProxy_1 values (1,'hello');
 
 
 create table dataProxy_2
 ( k integer, value varchar(500))
-  ASYNCEVENTLISTENER ( dataProxy_2 ) SERVER GROUPS ( dataProxy_1 ) ;
+  ASYNCEVENTLISTENER ( dataProxy_2 ) SERVER GROUPS ( poc ) ;
 
 insert into dataProxy_2 values (1,'hello');
 ----------------------------------------------------------------------------------------------------

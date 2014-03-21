@@ -40,7 +40,7 @@ public class DataBatchListener implements AsyncEventListener {
     @Override
     public boolean processEvents(List<Event> events) {
 
-        startLoadingData();
+        //startLoadingData();
 
         try {
 
@@ -142,12 +142,11 @@ public class DataBatchListener implements AsyncEventListener {
 
     private void clearMainTable(List<Event> events) {
         Connection connection = null;
-        Statement sql = null;
+        PreparedStatement pstm = null;
         ResultSet rs = null;
 
         try {
             connection = gfxdConnectionPool.getConnection();
-            sql = connection.createStatement();
 
             for (Event event : events) {
                 rs = event.getNewRowsAsResultSet();
@@ -158,8 +157,9 @@ public class DataBatchListener implements AsyncEventListener {
 
                         String data = rs.getString(1);
                         String delSQL = prepareSQL(data);
+                        pstm = connection.prepareStatement(delSQL);
                         if (null != delSQL)
-                            sql.addBatch(delSQL);
+                            pstm.addBatch(delSQL);
 
                     default:
                         break;
@@ -168,12 +168,18 @@ public class DataBatchListener implements AsyncEventListener {
                 rs.close();
             }
 
-            int[] results = sql.executeBatch();
-            int resultSize = results == null ? 0 : results.length;
+            pstm.executeBatch();
+            connection.commit();
+
 
         } catch (SQLException e1) {
 
             LOGGER.error("SQLError:" + e1.getMessage());
+            try {
+                connection.rollback();
+            } catch (SQLException e) {
+
+            }
 
         } finally {
 
