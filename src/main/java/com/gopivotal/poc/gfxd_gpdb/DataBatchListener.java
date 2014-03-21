@@ -40,7 +40,7 @@ public class DataBatchListener implements AsyncEventListener {
     @Override
     public boolean processEvents(List<Event> events) {
 
-        //startLoadingData();
+        startLoadingData();
 
         try {
 
