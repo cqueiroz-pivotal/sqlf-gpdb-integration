@@ -246,18 +246,18 @@ public class DataBatchListener implements AsyncEventListener {
             StringReader sr = new StringReader(sb.toString());
             p.load(sr);
 
-//            Class.forName("org.postgresql.Driver");
-//            BoneCPConfig config = new BoneCPConfig();
-//
-//            config.setJdbcUrl(p.getProperty("connectionURL"));
-//            config.setUsername(p.getProperty("username"));
-//            config.setPassword(p.getProperty("password"));
-//            config.setMinConnectionsPerPartition(1);
-//            config.setMaxConnectionsPerPartition(1);
-//            config.setPartitionCount(1);
-//            connectionPool = new BoneCP(config); // setup the connection pool
-//
-//            LOGGER.info("connectionPool started!!");
+            Class.forName("org.postgresql.Driver");
+            BoneCPConfig config = new BoneCPConfig();
+
+            config.setJdbcUrl(p.getProperty("connectionURL"));
+            config.setUsername(p.getProperty("username"));
+            config.setPassword(p.getProperty("password"));
+            config.setMinConnectionsPerPartition(1);
+            config.setMaxConnectionsPerPartition(1);
+            config.setPartitionCount(1);
+            connectionPool = new BoneCP(config); // setup the connection pool
+
+            LOGGER.info("connectionPool started!!");
 
             BoneCPConfig gfxdConfig = new BoneCPConfig();
             gfxdConfig.setJdbcUrl(p.getProperty("gfxdConnectionURL"));//("jdbc:sqlfire:");
