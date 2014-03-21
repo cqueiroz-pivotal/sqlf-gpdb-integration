@@ -14,7 +14,7 @@ public class BatchListenerTests {
 
     @Test
     public void testLoadConfig() throws IOException{
-        String s = "pipeFileLocation=/home/gpadmin/flights.pipe|extTableName=ext_flights|destTableName=app.flights|connectionURL=jdbc:postgresql://mdw:5440/airlines|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2='{1}'|stringPos=1|minConn=32|maxConn=64";
+        String s = "pipeFileLocation=/home/gpadmin/flights.pipe|extTableName=ext_flights|destTableName=app.flights|connectionURL=jdbc:postgresql://mdw:5440/airlines|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2='{1}'|stringPos=1|minConn=32|maxConn=64|integrate=false";
         Properties p = new Properties();
         StringBuilder sb = new StringBuilder();
         for(String property : s.split("\\|")){
@@ -41,6 +41,8 @@ public class BatchListenerTests {
         Assert.assertTrue(p.containsKey("minConn"));
         Assert.assertTrue(p.containsKey("maxConn"));
 
+        Assert.assertTrue(p.containsKey("integrate"));
+
 
         Assert.assertEquals("/home/gpadmin/flights.pipe",p.getProperty("pipeFileLocation"));
         Assert.assertEquals("ext_flights",p.getProperty("extTableName"));
@@ -58,6 +60,8 @@ public class BatchListenerTests {
 
         Assert.assertEquals("32",p.getProperty("minConn"));
         Assert.assertEquals("64",p.getProperty("maxConn"));
+
+        Assert.assertEquals("false",p.getProperty("integrate"));
 
 
 

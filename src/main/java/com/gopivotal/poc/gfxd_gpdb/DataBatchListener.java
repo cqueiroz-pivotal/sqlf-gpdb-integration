@@ -20,7 +20,8 @@ import java.util.Properties;
 
 /**
  * Code based on Charlie Black demo code.
- * User: cq
+ * @author cq
+ * modified by @author Wang Yi
  * Date: 11/03/2014
  * Time: 2:38 AM
  */
@@ -35,12 +36,14 @@ public class DataBatchListener implements AsyncEventListener {
     private String delPattern;
     private String whereClausePostions;
 
+    private boolean integrate = true;
+
     private BufferedWriter pipeWriter;
 
     @Override
     public boolean processEvents(List<Event> events) {
 
-        startLoadingData();
+        if(integrate) startLoadingData();
 
         try {
 
@@ -90,7 +93,7 @@ public class DataBatchListener implements AsyncEventListener {
 
             // To clear the main table data
             clearMainTable(events);
-            LOGGER.info("Main table data be cleared: " + i);
+            LOGGER.info("EmbeddedGFXDForTests table data be cleared: " + i);
 
             return true;
 
@@ -228,7 +231,7 @@ public class DataBatchListener implements AsyncEventListener {
     @Override
     public void close() {
 
-        connectionPool.shutdown();
+        if(integrate) connectionPool.shutdown();
         gfxdConnectionPool.shutdown();
     }
 
@@ -246,18 +249,27 @@ public class DataBatchListener implements AsyncEventListener {
             StringReader sr = new StringReader(sb.toString());
             p.load(sr);
 
-            Class.forName("org.postgresql.Driver");
-            BoneCPConfig config = new BoneCPConfig();
 
-            config.setJdbcUrl(p.getProperty("connectionURL"));
-            config.setUsername(p.getProperty("username"));
-            config.setPassword(p.getProperty("password"));
-            config.setMinConnectionsPerPartition(1);
-            config.setMaxConnectionsPerPartition(1);
-            config.setPartitionCount(1);
-            connectionPool = new BoneCP(config); // setup the connection pool
+            integrate = Boolean.parseBoolean(p.getProperty("integrate"));
 
-            LOGGER.info("connectionPool started!!");
+            if(integrate){
+                Class.forName("org.postgresql.Driver");
+                BoneCPConfig config = new BoneCPConfig();
+
+                config.setJdbcUrl(p.getProperty("connectionURL"));
+                config.setUsername(p.getProperty("username"));
+                config.setPassword(p.getProperty("password"));
+                config.setMinConnectionsPerPartition(1);
+                config.setMaxConnectionsPerPartition(1);
+                config.setPartitionCount(1);
+                connectionPool = new BoneCP(config); // setup the connection pool
+
+                LOGGER.info("GPDB connectionPool started!!");
+            }else{
+                LOGGER.info("GPDB connectionPool NOT started!!");
+                LOGGER.info("Running on DEBUG mode");
+            }
+
 
             BoneCPConfig gfxdConfig = new BoneCPConfig();
             gfxdConfig.setJdbcUrl(p.getProperty("gfxdConnectionURL"));//("jdbc:sqlfire:");
