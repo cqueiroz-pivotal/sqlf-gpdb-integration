@@ -67,6 +67,9 @@ public class DataBatchListener implements AsyncEventListener {
                             pipeWriter.write(data);
                             pipeWriter.newLine();
                             i++;
+                            // To clear the main table data
+                            //clearMainTable(events);
+//                            LOGGER.info("EmbeddedGFXDForTests table data be cleared: " + i);
                         } catch (SQLException e) {
                             LOGGER.error("Error doing single Insert/Update: ",e);
                         } catch(IOException e){
@@ -91,9 +94,7 @@ public class DataBatchListener implements AsyncEventListener {
 
             LOGGER.info("Events flushed into pipe: " + i);
 
-            // To clear the main table data
-            clearMainTable(events);
-            LOGGER.info("EmbeddedGFXDForTests table data be cleared: " + i);
+
 
             return true;
 
