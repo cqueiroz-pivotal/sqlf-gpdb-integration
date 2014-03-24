@@ -53,10 +53,10 @@ public class EmbeddedGFXDForTests {
             "INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1|minConn=32|maxConn=64|integrate=false'\n" +
             "MANUALSTART false\n" +
             "ENABLEBATCHCONFLATION false\n" +
-            "BATCHSIZE 100000\n" +
+            "BATCHSIZE 1000000\n" +
             "BATCHTIMEINTERVAL 6000\n" +
             "ENABLEPERSISTENCE false\n" +
-            "MAXQUEUEMEMORY 500\n" +
+            "MAXQUEUEMEMORY 2000\n" +
             ")\n" +
             "SERVER GROUPS ( poc )";
 

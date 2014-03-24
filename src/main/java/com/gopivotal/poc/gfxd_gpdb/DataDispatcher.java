@@ -33,29 +33,29 @@ public class DataDispatcher implements EventCallback {
 
     /** counter to choose next proxy table*/
     private int rr = 1;
-    private double counter0,counter1, counter, counter2;
+//    private double counter0,counter1, counter, counter2;
 
     private final List<String> tableNames = new ArrayList<String>(10);
 
 
-    private void processStats(long processingTime){
-
-        counter++;
-        if(processingTime<=2) {
-            counter2++;
-        }else if(processingTime>2 && processingTime<=100) {
-            counter0++;
-        }else {
-            counter1++;
-        }
-
-        if((counter % 100000) == 0){
-            LOGGER.info("too slow: " + (counter1/counter * 100.0f));
-            LOGGER.info("medium slow: " + (counter0/counter * 100.0f));
-            LOGGER.info("fast: " + (counter2/counter * 100.0f));
-        }
-
-    }
+//    private void processStats(long processingTime){
+//
+//        counter++;
+//        if(processingTime<=2) {
+//            counter2++;
+//        }else if(processingTime>2 && processingTime<=100) {
+//            counter0++;
+//        }else {
+//            counter1++;
+//        }
+//
+//        if((counter % 100000) == 0){
+//            LOGGER.info("too slow: " + (counter1/counter * 100.0f));
+//            LOGGER.info("medium slow: " + (counter0/counter * 100.0f));
+//            LOGGER.info("fast: " + (counter2/counter * 100.0f));
+//        }
+//
+//    }
 
     @Override
     public void onEvent(Event event) throws SQLException {
@@ -64,15 +64,15 @@ public class DataDispatcher implements EventCallback {
         switch (event.getType()) {
             case AFTER_INSERT:
             case AFTER_UPDATE:
-                long startTime = System.currentTimeMillis();
+//                long startTime = System.currentTimeMillis();
                 ResultSet rs = event.getNewRowsAsResultSet();
                 ResultSet pkRS = event.getPrimaryKeysAsResultSet();
                 int numCols = rs.getMetaData().getColumnCount();
                 Object pk = pkRS.getObject(1);
                 processRow(rs, pk, numCols);
-                long endTime = System.currentTimeMillis();
-                long pt = (endTime - startTime);
-                processStats(pt);
+//                long endTime = System.currentTimeMillis();
+//                long pt = (endTime - startTime);
+//                processStats(pt);
                 break;
 
             default:
@@ -95,7 +95,6 @@ public class DataDispatcher implements EventCallback {
         PreparedStatement pstm = null;
         Connection conn = null;
         final StringBuilder sb = new StringBuilder();
-        final StringBuilder sbs = new StringBuilder();
         try{
 
             conn = connectionPool.getConnection();
@@ -107,8 +106,6 @@ public class DataDispatcher implements EventCallback {
             sb.deleteCharAt(sb.length() -1);
 
             proxyLocation = ((pk.hashCode() & 0x7fffffff) % Integer.parseInt(p.getProperty("numproxies"))) + 1;
-//            sbs.append("update ").append(p.getProperty("proxyTablePrefix")).append("_").
-//                    append(proxyLocation).append(" set value=? where k=1");
 
             pstm = conn.prepareStatement(tableNames.get(proxyLocation - 1));
             pstm.setString(1, sb.toString());
@@ -173,7 +170,7 @@ public class DataDispatcher implements EventCallback {
 
             int num = Integer.parseInt(p.getProperty("numproxies"));
             for(int i = 1 ; i <=num ; i++){
-                StringBuffer sbs = new StringBuffer();
+                StringBuilder sbs = new StringBuilder();
                 tableNames.add(sbs.append("update ").append(p.getProperty("proxyTablePrefix")).append("_").
                         append(i).append(" set value=? where k=1").toString());
 

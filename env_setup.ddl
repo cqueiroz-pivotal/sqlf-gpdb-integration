@@ -22,7 +22,7 @@ CREATE TABLE "APP"."ERD_DATA"
 call SYS.ADD_LISTENER('ERD_LISTENER',
                       'APP','ERD_DATA',
                       'com.gopivotal.poc.gfxd_gpdb.DataDispatcher',
-                      'connectionURL=jdbc:sqlfire:|numproxies=1|proxyTablePrefix=dataProxy|username=app|password=app|minConn=32|maxConn=128',
+                      'connectionURL=jdbc:sqlfire:|numproxies=2|proxyTablePrefix=dataProxy|username=app|password=app|minConn=32|maxConn=128',
                       null);
 
 
@@ -38,11 +38,11 @@ BATCHTIMEINTERVAL 6000
 ENABLEPERSISTENCE false
 MAXQUEUEMEMORY 500
 )
-SERVER GROUPS ( poc );
+SERVER GROUPS ( dataProxy_1 );
 
-create table dataProxy_1
+create table DataProxy_1
 ( k integer, value varchar(500))
-  ASYNCEVENTLISTENER ( dataProxy_1 ) SERVER GROUPS ( poc ) ;
+  ASYNCEVENTLISTENER ( dataProxy_1 ) SERVER GROUPS ( DataProxy_1 ) ;
 
 insert into dataProxy_1 values (1,'hello');
 
@@ -58,12 +58,12 @@ CREATE ASYNCEVENTLISTENER dataProxy_2
   ENABLEPERSISTENCE false
   MAXQUEUEMEMORY 100
 )
-  SERVER GROUPS ( poc );
+  SERVER GROUPS ( dataProxy_2 );
 
 
 create table dataProxy_2
 ( k integer, value varchar(500))
-  ASYNCEVENTLISTENER ( dataProxy_2 ) SERVER GROUPS ( poc ) ;
+  ASYNCEVENTLISTENER ( dataProxy_2 ) SERVER GROUPS ( dataProxy_2 ) ;
 
 insert into dataProxy_2 values (1,'hello');
 

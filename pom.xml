@@ -6,7 +6,7 @@
 
     <groupId>gemfirexd-gpdb</groupId>
     <artifactId>gemfirexd-gpdb</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.5-SNAPSHOT</version>
 
 
     <repositories>
