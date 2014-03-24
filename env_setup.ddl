@@ -22,7 +22,7 @@ CREATE TABLE "APP"."ERD_DATA"
 call SYS.ADD_LISTENER('ERD_LISTENER',
                       'APP','ERD_DATA',
                       'com.gopivotal.poc.gfxd_gpdb.DataDispatcher',
-                      'connectionURL=jdbc:sqlfire:|numproxies=2|proxyTablePrefix=dataProxy|username=app|password=app|minConn=32|maxConn=128',
+                      'connectionURL=jdbc:gemfirexd:|numproxies=2|proxyTablePrefix=dataProxy|username=app|password=app|minConn=32|maxConn=128',
                       null);
 
 
