@@ -43,7 +43,7 @@ public class EmbeddedGFXDForTests {
     private static String ERD_LISTENER = "call SYS.ADD_LISTENER('ERD_LISTENER',\n" +
             "                      'APP','ERD_DATA',\n" +
             "                      'com.gopivotal.poc.gfxd_gpdb.DataDispatcher',\n" +
-            "                      'connectionURL=jdbc:sqlfire:|numproxies=1|proxyTablePrefix=dataProxy|username=app|password=app|minConn=32|maxConn=64',\n" +
+            "                      'connectionURL=jdbc:gemfirexd:|numproxies=1|proxyTablePrefix=dataProxy|username=app|password=app|minConn=64|maxConn=128',\n" +
             "                      null);";
 
 
@@ -56,7 +56,7 @@ public class EmbeddedGFXDForTests {
             "BATCHSIZE 100000\n" +
             "BATCHTIMEINTERVAL 6000\n" +
             "ENABLEPERSISTENCE false\n" +
-            "MAXQUEUEMEMORY 100\n" +
+            "MAXQUEUEMEMORY 500\n" +
             ")\n" +
             "SERVER GROUPS ( poc )";
 

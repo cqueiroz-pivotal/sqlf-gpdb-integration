@@ -39,20 +39,44 @@ public class DataBatchListener implements AsyncEventListener {
     private boolean integrate = true;
 
     private BufferedWriter pipeWriter;
+    private static double counter0,counter1, counter, counter2;
+
+
+    private void processStats(long processingTime){
+
+        counter++;
+        if(processingTime<=200) {
+            counter2++;
+        }else if(processingTime>200 && processingTime<=400) {
+            counter0++;
+        }else {
+            counter1++;
+        }
+
+//        if((counter % 100000) == 0){
+        LOGGER.info("too slow: " + (counter1/counter * 100.0f));
+        LOGGER.info("medium slow: " + (counter0/counter * 100.0f));
+        LOGGER.info("fast: " + (counter2/counter * 100.0f));
+//        }
+
+    }
+
 
     @Override
     public boolean processEvents(List<Event> events) {
 
+        long startTime = System.currentTimeMillis();
+
         if(integrate) startLoadingData();
 
         try {
-
             pipeWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(p.getProperty("pipeFileLocation"))));
             LOGGER.info("pipeWriter started!!");
 
-        } catch (FileNotFoundException e) {
-            LOGGER.error("Error starting pipe:", e);
+        }catch(FileNotFoundException e){
+            LOGGER.error("Error opening pipe: ",e);
         }
+
 
         try {
             int i = 0;
@@ -63,17 +87,17 @@ public class DataBatchListener implements AsyncEventListener {
                     case AFTER_INSERT:
                     case AFTER_UPDATE:
                         try {
+
                             String data = rs.getString(1);
                             pipeWriter.write(data);
                             pipeWriter.newLine();
                             i++;
                             // To clear the main table data
-                            //clearMainTable(events);
-//                            LOGGER.info("EmbeddedGFXDForTests table data be cleared: " + i);
+
                         } catch (SQLException e) {
                             LOGGER.error("Error doing single Insert/Update: ",e);
                         } catch(IOException e){
-                            LOGGER.error("Error writing to pipe: ",e);
+                            LOGGER.error("Error writing to pipe: ", e);
                         }finally{
                             try {
                                 if(rs!=null)
@@ -90,16 +114,21 @@ public class DataBatchListener implements AsyncEventListener {
 
             pipeWriter.flush();
             pipeWriter.close();
+            clearMainTable(events);
+            LOGGER.info("EmbeddedGFXDForTests table data be cleared: " + i);
 
+            long endTime = System.currentTimeMillis();
+            long pt = (endTime - startTime);
+            processStats(pt);
 
             LOGGER.info("Events flushed into pipe: " + i);
-
-
 
             return true;
 
         } catch (IOException e) {
             LOGGER.error("Error writing to pipe: ", e);
+        }catch (Exception e){
+            LOGGER.error("Error",e);
         }
 
         return false;
@@ -207,7 +236,7 @@ public class DataBatchListener implements AsyncEventListener {
         String[] positions = whereClausePostions.split("\\-");
         String[] dataArr = data.split("\\|");
 
-        LOGGER.info("data in preparSQL:"+data);
+//        LOGGER.info("data in preparSQL:"+data);
 
         if (null != positions) {
             int iPostion = 0;
@@ -224,7 +253,7 @@ public class DataBatchListener implements AsyncEventListener {
             }
         }
 
-        LOGGER.info("delSQL=" + sql);
+//        LOGGER.info("delSQL=" + sql);
 
         return sql;
     }
@@ -234,6 +263,11 @@ public class DataBatchListener implements AsyncEventListener {
 
         if(integrate) connectionPool.shutdown();
         gfxdConnectionPool.shutdown();
+        try {
+            pipeWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

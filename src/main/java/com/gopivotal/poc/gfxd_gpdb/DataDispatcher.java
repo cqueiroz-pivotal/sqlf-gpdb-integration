@@ -14,6 +14,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -31,6 +33,29 @@ public class DataDispatcher implements EventCallback {
 
     /** counter to choose next proxy table*/
     private int rr = 1;
+    private double counter0,counter1, counter, counter2;
+
+    private final List<String> tableNames = new ArrayList<String>(10);
+
+
+    private void processStats(long processingTime){
+
+        counter++;
+        if(processingTime<=2) {
+            counter2++;
+        }else if(processingTime>2 && processingTime<=100) {
+            counter0++;
+        }else {
+            counter1++;
+        }
+
+        if((counter % 100000) == 0){
+            LOGGER.info("too slow: " + (counter1/counter * 100.0f));
+            LOGGER.info("medium slow: " + (counter0/counter * 100.0f));
+            LOGGER.info("fast: " + (counter2/counter * 100.0f));
+        }
+
+    }
 
     @Override
     public void onEvent(Event event) throws SQLException {
@@ -39,11 +64,15 @@ public class DataDispatcher implements EventCallback {
         switch (event.getType()) {
             case AFTER_INSERT:
             case AFTER_UPDATE:
+                long startTime = System.currentTimeMillis();
                 ResultSet rs = event.getNewRowsAsResultSet();
                 ResultSet pkRS = event.getPrimaryKeysAsResultSet();
                 int numCols = rs.getMetaData().getColumnCount();
                 Object pk = pkRS.getObject(1);
                 processRow(rs, pk, numCols);
+                long endTime = System.currentTimeMillis();
+                long pt = (endTime - startTime);
+                processStats(pt);
                 break;
 
             default:
@@ -65,22 +94,26 @@ public class DataDispatcher implements EventCallback {
         String tableName = "";
         PreparedStatement pstm = null;
         Connection conn = null;
-
+        final StringBuilder sb = new StringBuilder();
+        final StringBuilder sbs = new StringBuilder();
         try{
 
             conn = connectionPool.getConnection();
-            StringBuffer sb = new StringBuffer();
+
             for(int i = 1; i <= numCols ; i++){
                 sb.append(rs.getObject(i));
                 sb.append('|');
             }
+            sb.deleteCharAt(sb.length() -1);
 
             proxyLocation = ((pk.hashCode() & 0x7fffffff) % Integer.parseInt(p.getProperty("numproxies"))) + 1;
-            tableName = p.getProperty("proxyTablePrefix") + "_" + proxyLocation;
+//            sbs.append("update ").append(p.getProperty("proxyTablePrefix")).append("_").
+//                    append(proxyLocation).append(" set value=? where k=1");
 
-            pstm = conn.prepareStatement("update " + tableName + " set value=? where k=1");
-            pstm.setString(1, sb.deleteCharAt(sb.length() -1 ).toString());
+            pstm = conn.prepareStatement(tableNames.get(proxyLocation - 1));
+            pstm.setString(1, sb.toString());
             pstm.executeUpdate();
+
 
 
         }catch(SQLException e){
@@ -93,6 +126,8 @@ public class DataDispatcher implements EventCallback {
                 if(pstm!=null)  pstm.close();
                 if(conn!=null)  conn.close();
 
+
+
             } catch (SQLException e) {
                 LOGGER.error("Error closing connection/statement ",e);
             }
@@ -103,6 +138,7 @@ public class DataDispatcher implements EventCallback {
 
     @Override
     public void close() throws SQLException {
+
         connectionPool.shutdown();
 
     }
@@ -129,9 +165,20 @@ public class DataDispatcher implements EventCallback {
             config.setMinConnectionsPerPartition(Integer.parseInt(p.getProperty("minConn")));
             config.setMaxConnectionsPerPartition(Integer.parseInt(p.getProperty("maxConn")));
             config.setPartitionCount(1);
+            config.setDisableJMX(true);
+            config.setStatisticsEnabled(true);
             connectionPool = new BoneCP(config); // setup the connection pool
 
             LOGGER.info("Connection pool created");
+
+            int num = Integer.parseInt(p.getProperty("numproxies"));
+            for(int i = 1 ; i <=num ; i++){
+                StringBuffer sbs = new StringBuffer();
+                tableNames.add(sbs.append("update ").append(p.getProperty("proxyTablePrefix")).append("_").
+                        append(i).append(" set value=? where k=1").toString());
+
+            }
+            LOGGER.info("Table names created");
 
 
         } catch (IOException e) {

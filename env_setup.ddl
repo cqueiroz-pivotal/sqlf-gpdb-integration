@@ -22,7 +22,7 @@ CREATE TABLE "APP"."ERD_DATA"
 call SYS.ADD_LISTENER('ERD_LISTENER',
                       'APP','ERD_DATA',
                       'com.gopivotal.poc.gfxd_gpdb.DataDispatcher',
-                      'connectionURL=jdbc:sqlfire:|numproxies=1|proxyTablePrefix=dataProxy|username=app|password=app|minConn=32|maxConn=64',
+                      'connectionURL=jdbc:sqlfire:|numproxies=1|proxyTablePrefix=dataProxy|username=app|password=app|minConn=32|maxConn=128',
                       null);
 
 
@@ -30,19 +30,19 @@ call SYS.ADD_LISTENER('ERD_LISTENER',
 CREATE ASYNCEVENTLISTENER dataProxy_1
 (
 LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
-INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1|minConn=32|maxConn=64'
+INITPARAMS 'pipeFileLocation=/dev/null|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1|minConn=2|maxConn=128'
 MANUALSTART false
 ENABLEBATCHCONFLATION false
 BATCHSIZE 100000
 BATCHTIMEINTERVAL 6000
 ENABLEPERSISTENCE false
-MAXQUEUEMEMORY 100
+MAXQUEUEMEMORY 500
 )
 SERVER GROUPS ( poc );
 
 create table dataProxy_1
 ( k integer, value varchar(500))
-  ASYNCEVENTLISTENER ( dataProxy_1 ) SERVER GROUPS ( dataProxy_1 ) ;
+  ASYNCEVENTLISTENER ( dataProxy_1 ) SERVER GROUPS ( poc ) ;
 
 insert into dataProxy_1 values (1,'hello');
 
@@ -50,7 +50,7 @@ insert into dataProxy_1 values (1,'hello');
 CREATE ASYNCEVENTLISTENER dataProxy_2
 (
   LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
-   INITPARAMS 'pipeFileLocation=/tmp/data.pipe|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1|minConn=32|maxConn=64'
+   INITPARAMS 'pipeFileLocation=/dev/null|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1|minConn=32|maxConn=64'
   MANUALSTART false
   ENABLEBATCHCONFLATION false
   BATCHSIZE 100000
@@ -63,9 +63,55 @@ CREATE ASYNCEVENTLISTENER dataProxy_2
 
 create table dataProxy_2
 ( k integer, value varchar(500))
-  ASYNCEVENTLISTENER ( dataProxy_2 ) SERVER GROUPS ( dataProxy_2 ) ;
+  ASYNCEVENTLISTENER ( dataProxy_2 ) SERVER GROUPS ( poc ) ;
 
 insert into dataProxy_2 values (1,'hello');
+
+
+
+CREATE ASYNCEVENTLISTENER dataProxy_3
+(
+LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
+INITPARAMS 'pipeFileLocation=/dev/null|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1|minConn=32|maxConn=64'
+MANUALSTART false
+ENABLEBATCHCONFLATION false
+BATCHSIZE 100000
+BATCHTIMEINTERVAL 6000
+ENABLEPERSISTENCE false
+MAXQUEUEMEMORY 100
+)
+SERVER GROUPS ( poc );
+
+
+create table dataProxy_3
+( k integer, value varchar(500))
+  ASYNCEVENTLISTENER ( dataProxy_3 ) SERVER GROUPS ( poc ) ;
+
+insert into dataProxy_3 values (1,'hello');
+
+
+CREATE ASYNCEVENTLISTENER dataProxy_4
+(
+LISTENERCLASS 'com.gopivotal.poc.gfxd_gpdb.DataBatchListener'
+INITPARAMS 'pipeFileLocation=/dev/null|extTableName=app.ext_data|destTableName=app.data|connectionURL=jdbc:postgresql://mdw:5432/fdc|username=gpadmin|password=gpadmin|gfxdConnectionURL=jdbc:sqlfire:|gfxdUserName=app|gfxdPassword=app|delPattern=delete from app.erd_data where ERD_2=''{1}''|whereClausePostions=1|minConn=32|maxConn=64'
+MANUALSTART false
+ENABLEBATCHCONFLATION false
+BATCHSIZE 100000
+BATCHTIMEINTERVAL 6000
+ENABLEPERSISTENCE false
+MAXQUEUEMEMORY 100
+)
+SERVER GROUPS ( poc );
+
+
+create table dataProxy_4
+( k integer, value varchar(500))
+  ASYNCEVENTLISTENER ( dataProxy_4 ) SERVER GROUPS ( poc ) ;
+
+insert into dataProxy_4 values (1,'hello');
+
+
+
 ----------------------------------------------------------------------------------------------------
 insert into dataProxy_1 values (1,'hello');
 insert into dataProxy_2 values (1,'hello');
