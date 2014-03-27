@@ -4,8 +4,11 @@ import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 
 
+import com.pivotal.gemfirexd.callbacks.DBSynchronizer;
 import com.pivotal.gemfirexd.callbacks.Event;
 import com.pivotal.gemfirexd.callbacks.EventCallback;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +31,10 @@ public class DataDispatcher implements EventCallback {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataDispatcher.class);
 
-    private BoneCP connectionPool;
+//    private BoneCP connectionPool;
     private final Properties p = new Properties();
 
+    private HikariDataSource ds;
     /** counter to choose next proxy table*/
     private int rr = 1;
 //    private double counter0,counter1, counter, counter2;
@@ -61,11 +65,13 @@ public class DataDispatcher implements EventCallback {
     public void onEvent(Event event) throws SQLException {
 
 
+
         switch (event.getType()) {
             case AFTER_INSERT:
             case AFTER_UPDATE:
 //                long startTime = System.currentTimeMillis();
                 ResultSet rs = event.getNewRowsAsResultSet();
+
                 ResultSet pkRS = event.getPrimaryKeysAsResultSet();
                 int numCols = rs.getMetaData().getColumnCount();
                 Object pk = pkRS.getObject(1);
@@ -97,13 +103,13 @@ public class DataDispatcher implements EventCallback {
         final StringBuilder sb = new StringBuilder();
         try{
 
-            conn = connectionPool.getConnection();
-
             for(int i = 1; i <= numCols ; i++){
                 sb.append(rs.getObject(i));
                 sb.append('|');
             }
             sb.deleteCharAt(sb.length() -1);
+
+            conn = ds.getConnection();
 
             proxyLocation = ((pk.hashCode() & 0x7fffffff) % Integer.parseInt(p.getProperty("numproxies"))) + 1;
 
@@ -136,8 +142,9 @@ public class DataDispatcher implements EventCallback {
     @Override
     public void close() throws SQLException {
 
-        connectionPool.shutdown();
+//        connectionPool.shutdown();
 
+            ds.shutdown();
     }
 
     @Override
@@ -154,19 +161,20 @@ public class DataDispatcher implements EventCallback {
             StringReader sr = new StringReader(sb.toString());
             p.load(sr);
 
-            BoneCPConfig config = new BoneCPConfig();
 
-            config.setJdbcUrl(p.getProperty("connectionURL"));
-            config.setUsername(p.getProperty("username"));
-            config.setPassword(p.getProperty("password"));
-            config.setMinConnectionsPerPartition(Integer.parseInt(p.getProperty("minConn")));
-            config.setMaxConnectionsPerPartition(Integer.parseInt(p.getProperty("maxConn")));
-            config.setPartitionCount(1);
-            config.setDisableJMX(true);
-            config.setStatisticsEnabled(true);
-            connectionPool = new BoneCP(config); // setup the connection pool
+            HikariConfig config = new HikariConfig();
+            config.setMaximumPoolSize(Integer.parseInt(p.getProperty("maxConn")));
+            config.setMinimumPoolSize(Integer.parseInt(p.getProperty("minConn")));
 
-            LOGGER.info("Connection pool created");
+            config.setDataSourceClassName("com.pivotal.gemfirexd.internal.jdbc.EmbeddedDataSource");
+//            config.addDataSourceProperty("url",p.getProperty("connectionURL"));
+            config.addDataSourceProperty("user", "app");
+            config.addDataSourceProperty("password", "app");
+
+            ds = new HikariDataSource(config);
+
+            LOGGER.info("HikariCP Connection pool created");
+
 
             int num = Integer.parseInt(p.getProperty("numproxies"));
             for(int i = 1 ; i <=num ; i++){
@@ -180,9 +188,8 @@ public class DataDispatcher implements EventCallback {
 
         } catch (IOException e) {
             LOGGER.error("Error parsing configuration input:", e);
-        } catch (SQLException e){
-            LOGGER.error("Error starting pool", e);
-
         }
     }
+
+
 }

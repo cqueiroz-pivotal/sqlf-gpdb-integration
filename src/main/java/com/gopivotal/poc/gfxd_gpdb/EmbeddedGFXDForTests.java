@@ -1,5 +1,6 @@
 package com.gopivotal.poc.gfxd_gpdb;
 
+import com.pivotal.gemfirexd.FabricLocator;
 import com.pivotal.gemfirexd.FabricServer;
 import com.pivotal.gemfirexd.FabricServiceManager;
 import org.slf4j.Logger;
@@ -23,19 +24,46 @@ public class EmbeddedGFXDForTests {
 
     private static String ERD_DATA_TABLE = "CREATE TABLE \"APP\".\"ERD_DATA\"\n" +
             "(\n" +
-            "  ERD_1 timestamp NOT NULL,\n" +
-            "  ERD_2 varchar(100) NOT NULL,\n" +
+            "  ERD_1 VARCHAR(50) NOT NULL,\n" +
+            "  ERD_2 BIGINT NOT NULL,\n" +
             "  ERD_3 varchar(20) NOT NULL,\n" +
             "  ERD_4 varchar(20) NOT NULL,\n" +
             "  ERD_5 varchar(20) NOT NULL,\n" +
             "  ERD_6 varchar(20) NOT NULL,\n" +
             "  ERD_7 varchar(20) NOT NULL,\n" +
-            "  ERD_8 int NOT NULL,\n" +
-            "  ERD_9 int NOT NULL,\n" +
-            "  ERD_10 int NOT NULL,\n" +
-            "  ERD_11 int NOT NULL,\n" +
-            "  ERD_12 int NOT NULL,\n" +
-            "  PRIMARY KEY (ERD_2)\n" +
+            "  ERD_8 BIGINT NOT NULL,\n" +
+            "  ERD_9 BIGINT NOT NULL,\n" +
+            "  ERD_10 BIGINT NOT NULL,\n" +
+            "  ERD_11 BIGINT NOT NULL,\n" +
+            "  ERD_12 BIGINT NOT NULL\n" +
+            ") PARTITION BY COLUMN (ERD_2)\n" +
+            "  REDUNDANCY 0\n" +
+            "  ASYNCEVENTLISTENER ( DBSync ) SERVER GROUPS ( poc ) \n" +
+            "  SERVER GROUPS (POC)";
+
+    private static String ERD_DATA_TABLE_O = "CREATE TABLE \"APP\".\"ERD_DATA\"\n" +
+            "(\n" +
+            "   ERD_1 timestamp NOT NULL,\n" +
+            "   ERD_2 VARCHAR(100) NOT NULL,\n" +
+            "   ERD_3 varchar(20) NOT NULL,\n" +
+            "   ERD_4 varchar(20) NOT NULL,\n" +
+            "   ERD_5 varchar(20) NOT NULL,\n" +
+            "   ERD_6 varchar(20) NOT NULL,\n" +
+            "   ERD_7 varchar(20) NOT NULL,\n" +
+            "   ERD_8 int NOT NULL,\n" +
+            "   ERD_9 int NOT NULL,\n" +
+            "   ERD_10 int NOT NULL,\n" +
+            "   ERD_11 int NOT NULL,\n" +
+            "   ERD_12 int NOT NULL\n" +
+            ") PARTITION BY COLUMN (ERD_2) \n" +
+            "SERVER GROUPS (POC) \n" +
+            "REDUNDANCY 0";
+
+
+    private static String ERD_DATA_TABLE2 = "CREATE TABLE \"APP\".\"ERD_DATA2\"\n" +
+            "(\n" +
+            "  ERD_1 int NOT NULL,\n" +
+            "  ERD_2 int NOT NULL\n" +
             ") PARTITION BY COLUMN (ERD_2)\n" +
             "  REDUNDANCY 0\n" +
             "  SERVER GROUPS (poc)";
@@ -60,9 +88,27 @@ public class EmbeddedGFXDForTests {
             ")\n" +
             "SERVER GROUPS ( poc )";
 
+    private static String DB_SYNC_LISTENER = "CREATE ASYNCEVENTLISTENER DBSync\n" +
+            "(\n" +
+            "LISTENERCLASS 'com.pivotal.gemfirexd.callbacks.DBSynchronizer'\n" +
+            "INITPARAMS 'org.postgresql.Driver,jdbc:postgresql://localhost:5432/app,user=cq,password='\n" +
+            "MANUALSTART false\n" +
+            "ENABLEBATCHCONFLATION false\n" +
+            "BATCHSIZE 100000\n" +
+            "BATCHTIMEINTERVAL 5000\n" +
+            "ENABLEPERSISTENCE true\n" +
+            "MAXQUEUEMEMORY 500\n" +
+            ")\n" +
+            "SERVER GROUPS ( poc )";
+
+
     private static String PROXY_TABLE_1 = "create table dataProxy_1\n" +
             "( k integer, value varchar(500))\n" +
             "  ASYNCEVENTLISTENER ( dataProxy_1 ) SERVER GROUPS ( poc )";
+
+    private static String PROXY_TABLE_1_0 = "create table dataProxy_1\n" +
+            "( k integer, value varchar(500))\n" +
+            "  SERVER GROUPS ( poc )";
 
 
     private static String INSERT_PROXY_TABLE_1 = "insert into dataProxy_1 values (1,'2014-03-21 11:33:47.078|ee70ed9b-ead7-40a7-b089-d7b5ec18df01|a1234567891234567890|b1234567891234567890|c123456789|d123456789|e123456789|1967155024|197416237|934958692|527614193|1598464958')";
@@ -80,29 +126,39 @@ public class EmbeddedGFXDForTests {
 
         try {
             conn = DriverManager.getConnection("jdbc:gemfirexd:", connProps);
-            ps = conn.prepareStatement(ERD_DATA_TABLE);
+
+
+//            ps = conn.prepareStatement(DB_SYNC_LISTENER);
+//            ps.executeUpdate();
+//            ps.close();
+//
+//            ps = conn.prepareStatement(ERD_DATA_TABLE);
+//            ps.executeUpdate();
+//            ps.close();
+
+
+            ps = conn.prepareStatement(ERD_DATA_TABLE_O);
             ps.executeUpdate();
             ps.close();
 
             ps = conn.prepareStatement(ERD_LISTENER);
             ps.executeUpdate();
             ps.close();
-
-            ps = conn.prepareStatement(DATA_PROXY_LISTENER);
+//
+//            ps = conn.prepareStatement(DATA_PROXY_LISTENER);
+//            ps.executeUpdate();
+//            ps.close();
+//
+            ps = conn.prepareStatement(PROXY_TABLE_1_0);
             ps.executeUpdate();
             ps.close();
-
-            ps = conn.prepareStatement(PROXY_TABLE_1);
-            ps.executeUpdate();
-            ps.close();
-
+//
             ps = conn.prepareStatement(INSERT_PROXY_TABLE_1);
             int i = ps.executeUpdate();
             ps.close();
+            if(i>0)
+                LOGGER.info("Row inserted to DataProxy_1 table");
 
-            if(LOGGER.isDebugEnabled() && i > 0){
-                LOGGER.debug("Row inserted to DataProxy_1 table");
-            }
 
 
         }finally{
@@ -112,7 +168,7 @@ public class EmbeddedGFXDForTests {
 
     }
 
-    private FabricServer startServer() throws SQLException{
+    private FabricServer  startServer() throws SQLException{
         final String gfxdDir = "/tmp/egfxd";
 
         File f = new File(gfxdDir);
@@ -126,11 +182,14 @@ public class EmbeddedGFXDForTests {
         serverProps.setProperty("persist-dd", "false");
         serverProps.setProperty("sys-disk-dir",gfxdDir);
         serverProps.setProperty("server-groups","poc");
-
+        serverProps.setProperty("proxyTableName","DataProxy_1");
 
         FabricServer server = FabricServiceManager.getFabricServerInstance();
+
         server.start(serverProps);
+
         return server;
+
 
     }
 
@@ -138,8 +197,9 @@ public class EmbeddedGFXDForTests {
 
 
         EmbeddedGFXDForTests gfxd = new EmbeddedGFXDForTests();
-        FabricServer server  = gfxd.startServer();
+        FabricServer server =  gfxd.startServer();
         gfxd.setupDataSchema();
+        // Start the DRDA network server and listen for client connections
         server.startNetworkServer(null,-1, null);
         Object lock = new Object();
         synchronized (lock) {

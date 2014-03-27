@@ -7,7 +7,7 @@
         </encoder>
     </appender>
     <logger name="com.gopivotal.poc.gfxd_gpdb">
-        <level value="DEBUG" />
+        <level value="INFO" />
     </logger>
 
     <logger name="com.zaxxer.hikari">
