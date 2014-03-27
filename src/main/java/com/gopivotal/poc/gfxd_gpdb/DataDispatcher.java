@@ -47,10 +47,8 @@ public class DataDispatcher implements EventCallback {
             case AFTER_INSERT:
             case AFTER_UPDATE:
                 ResultSet rs = event.getNewRowsAsResultSet();
-                ResultSet pkRS = event.getPrimaryKeysAsResultSet();
                 int numCols = rs.getMetaData().getColumnCount();
-                Object pk = pkRS.getObject(1);
-                processRow(rs, pk, numCols);
+                processRow(rs, numCols);
                 break;
 
             default:
@@ -62,10 +60,9 @@ public class DataDispatcher implements EventCallback {
     /**
      *
      * @param rs
-     * @param pk
      * @param numCols
      */
-    private void processRow(ResultSet rs, Object pk, int numCols) {
+    private void processRow(ResultSet rs, int numCols) {
 
         PreparedStatement pstm = null;
         Connection conn = null;
