@@ -34,111 +34,72 @@ public class DataBatchListener implements AsyncEventListener {
 
 
     private boolean integrate = true;
-    private boolean jdbc = false;
+
 
     private BufferedWriter pipeWriter;
-//    private static double counter0,counter1, counter, counter2;
-
-
-//    private void processStats(long processingTime){
-//
-//        counter++;
-//        if(processingTime<=200) {
-//            counter2++;
-//        }else if(processingTime>200 && processingTime<=400) {
-//            counter0++;
-//        }else {
-//            counter1++;
-//        }
-//
-////        if((counter % 100000) == 0){
-//        LOGGER.info("too slow: " + (counter1/counter * 100.0f));
-//        LOGGER.info("medium slow: " + (counter0/counter * 100.0f));
-//        LOGGER.info("fast: " + (counter2/counter * 100.0f));
-////        }
-//
-//    }
-
 
     @Override
     public boolean processEvents(List<Event> events) {
 
 //        long startTime = System.currentTimeMillis();
 
-        if(integrate && !jdbc) startLoadingData();
+        if (integrate) startLoadingData();
 
-        if(jdbc){
+        try {
 
-
-
-        }else{
-            try {
-
-                pipeWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(p.getProperty("pipeFileLocation"))));
+            pipeWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(p.getProperty("pipeFileLocation"))));
 //            LOGGER.info("pipeWriter started!!");
 
-            }catch(FileNotFoundException e){
-                LOGGER.error("Error opening pipe: ",e);
-                return false;
-            }
-
-            try {
-                int i = 0;
-                for(Event event : events){
-                    ResultSet rs = event.getNewRowsAsResultSet();
-                    switch(event.getType()){
-
-                        case AFTER_INSERT:
-                        case AFTER_UPDATE:
-                            try {
-
-                                String data = rs.getString(1);
-                                pipeWriter.write(data);
-                                pipeWriter.newLine();
-                                i++;
-                                // To clear the main table data
-
-                            } catch (SQLException e) {
-                                LOGGER.error("Error doing single Insert/Update: ",e);
-                            } catch(IOException e){
-                                LOGGER.error("Error writing to pipe: ", e);
-                            }finally{
-                                try {
-                                    if(rs!=null)
-                                        rs.close();
-                                } catch (SQLException e) {
-                                    LOGGER.error("Error closing RS ",e);
-                                }
-                            }
-
-                        default:
-                            break;
-                    }
-                }
-
-                pipeWriter.flush();
-                pipeWriter.close();
-//            clearMainTable(events);
-//            LOGGER.info("EmbeddedGFXDForTests table data be cleared: " + i);
-
-//            long endTime = System.currentTimeMillis();
-//            long pt = (endTime - startTime);
-//            processStats(pt);
-
-                LOGGER.info("Events flushed to pipe: " + i);
-
-                return true;
-
-            } catch (IOException e) {
-                LOGGER.error("Error writing to pipe: ", e);
-            }catch (Exception e){
-                LOGGER.error("Error",e);
-            }
+        } catch (FileNotFoundException e) {
+            LOGGER.error("Error opening pipe: ", e);
+            return false;
         }
 
+        try {
+//            int i = 0;
+            for (Event event : events) {
+                ResultSet rs = event.getNewRowsAsResultSet();
+                switch (event.getType()) {
 
+                    case AFTER_INSERT:
+                    case AFTER_UPDATE:
+                        try {
 
+                            String data = rs.getString(1);
+                            pipeWriter.write(data);
+                            pipeWriter.newLine();
+//                            i++;
+                            // To clear the main table data
 
+                        } catch (SQLException e) {
+                            LOGGER.error("Error doing single Insert/Update: ", e);
+                        } catch (IOException e) {
+                            LOGGER.error("Error writing to pipe: ", e);
+                        } finally {
+                            try {
+                                if (rs != null)
+                                    rs.close();
+                            } catch (SQLException e) {
+                                LOGGER.error("Error closing RS ", e);
+                            }
+                        }
+
+                    default:
+                        break;
+                }
+            }
+
+            pipeWriter.flush();
+            pipeWriter.close();
+
+//            LOGGER.info("Events flushed to pipe: " + i);
+            return true;
+
+        } catch (IOException e) {
+            LOGGER.error("Error writing to pipe: ", e);
+        } catch (Exception e) {
+            LOGGER.error("Error", e);
+        }
 
         return false;
     }
@@ -186,7 +147,7 @@ public class DataBatchListener implements AsyncEventListener {
     public void close() {
 
         if(integrate) connectionPool.shutdown();
-//        gfxdConnectionPool.shutdown();
+
         try {
             pipeWriter.close();
         } catch (IOException e) {
@@ -218,8 +179,8 @@ public class DataBatchListener implements AsyncEventListener {
                 config.setJdbcUrl(p.getProperty("connectionURL"));
                 config.setUsername(p.getProperty("username"));
                 config.setPassword(p.getProperty("password"));
-                config.setMinConnectionsPerPartition(1);
-                config.setMaxConnectionsPerPartition(20);
+                config.setMinConnectionsPerPartition(Integer.parseInt(p.getProperty("minConn")));
+                config.setMaxConnectionsPerPartition(Integer.parseInt(p.getProperty("maxConn")));
                 config.setPartitionCount(1);
                 connectionPool = new BoneCP(config); // setup the connection pool
 

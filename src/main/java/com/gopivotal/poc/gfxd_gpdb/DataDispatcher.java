@@ -31,35 +31,12 @@ public class DataDispatcher implements EventCallback {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataDispatcher.class);
 
-//    private BoneCP connectionPool;
     private final Properties p = new Properties();
 
     private HikariDataSource ds;
-    /** counter to choose next proxy table*/
-    private int rr = 1;
-//    private double counter0,counter1, counter, counter2;
 
-//    private final List<String> tableNames = new ArrayList<String>(10);
-    private String updateSQL = "";
 
-//    private void processStats(long processingTime){
-//
-//        counter++;
-//        if(processingTime<=2) {
-//            counter2++;
-//        }else if(processingTime>2 && processingTime<=100) {
-//            counter0++;
-//        }else {
-//            counter1++;
-//        }
-//
-//        if((counter % 100000) == 0){
-//            LOGGER.info("too slow: " + (counter1/counter * 100.0f));
-//            LOGGER.info("medium slow: " + (counter0/counter * 100.0f));
-//            LOGGER.info("fast: " + (counter2/counter * 100.0f));
-//        }
-//
-//    }
+    private final List<String> tableNamesList = new ArrayList<String>(20);
 
     @Override
     public void onEvent(Event event) throws SQLException {
@@ -69,16 +46,11 @@ public class DataDispatcher implements EventCallback {
         switch (event.getType()) {
             case AFTER_INSERT:
             case AFTER_UPDATE:
-//                long startTime = System.currentTimeMillis();
                 ResultSet rs = event.getNewRowsAsResultSet();
-
                 ResultSet pkRS = event.getPrimaryKeysAsResultSet();
                 int numCols = rs.getMetaData().getColumnCount();
                 Object pk = pkRS.getObject(1);
                 processRow(rs, pk, numCols);
-//                long endTime = System.currentTimeMillis();
-//                long pt = (endTime - startTime);
-//                processStats(pt);
                 break;
 
             default:
@@ -95,12 +67,10 @@ public class DataDispatcher implements EventCallback {
      */
     private void processRow(ResultSet rs, Object pk, int numCols) {
 
-
-//        int proxyLocation;
-//        String tableName = "";
         PreparedStatement pstm = null;
         Connection conn = null;
         final StringBuilder sb = new StringBuilder();
+        String updateSQL = null;
         try{
 
             for(int i = 1; i <= numCols ; i++){
@@ -110,10 +80,11 @@ public class DataDispatcher implements EventCallback {
             sb.deleteCharAt(sb.length() -1);
 
             conn = ds.getConnection();
-
+            updateSQL = tableNamesList.get((int)System.currentTimeMillis() % tableNamesList.size());
             pstm = conn.prepareStatement(updateSQL);
             pstm.setString(1, sb.toString());
             pstm.executeUpdate();
+
 
 
         }catch(SQLException e){
@@ -127,7 +98,6 @@ public class DataDispatcher implements EventCallback {
                 if(conn!=null)  conn.close();
 
 
-
             } catch (SQLException e) {
                 LOGGER.error("Error closing connection/statement ",e);
             }
@@ -138,8 +108,6 @@ public class DataDispatcher implements EventCallback {
 
     @Override
     public void close() throws SQLException {
-
-//        connectionPool.shutdown();
 
             ds.shutdown();
     }
@@ -170,18 +138,20 @@ public class DataDispatcher implements EventCallback {
             LOGGER.info("HikariCP Connection pool created");
 
 
-//            int num = Integer.parseInt(p.getProperty("numproxies"));
-//            for(int i = 1 ; i <=num ; i++){
-//
-//
-//            }
 
-            StringBuilder sbs = new StringBuilder();
 
-            updateSQL = sbs.append("update ").append(System.getProperty("proxyTableName")).
-                    append(" set value=? where k=1").toString();
+            String[] tableNames = System.getProperty("proxyTableName").split(",");
 
-            LOGGER.info("UpdateSQL created");
+            for(String name : tableNames){
+                StringBuilder sbs = new StringBuilder();
+                tableNamesList.add(sbs.append("update ").append(name).
+                        append(" set value=? where k=1").toString());
+
+            }
+
+
+
+            LOGGER.info("UpdateSQLs created: " + tableNamesList.size());
 
 
         } catch (IOException e) {

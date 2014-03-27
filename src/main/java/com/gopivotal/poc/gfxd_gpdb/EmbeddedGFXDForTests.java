@@ -110,8 +110,13 @@ public class EmbeddedGFXDForTests {
             "( k integer, value varchar(500))\n" +
             "  SERVER GROUPS ( poc )";
 
+    private static String PROXY_TABLE_2_0 = "create table dataProxy_2\n" +
+            "( k integer, value varchar(500))\n" +
+            "  SERVER GROUPS ( poc )";
+
 
     private static String INSERT_PROXY_TABLE_1 = "insert into dataProxy_1 values (1,'2014-03-21 11:33:47.078|ee70ed9b-ead7-40a7-b089-d7b5ec18df01|a1234567891234567890|b1234567891234567890|c123456789|d123456789|e123456789|1967155024|197416237|934958692|527614193|1598464958')";
+    private static String INSERT_PROXY_TABLE_2 = "insert into dataProxy_2 values (1,'2014-03-21 11:33:47.078|ee70ed9b-ead7-40a7-b089-d7b5ec18df01|a1234567891234567890|b1234567891234567890|c123456789|d123456789|e123456789|1967155024|197416237|934958692|527614193|1598464958')";
 
 
 
@@ -152,6 +157,10 @@ public class EmbeddedGFXDForTests {
             ps = conn.prepareStatement(PROXY_TABLE_1_0);
             ps.executeUpdate();
             ps.close();
+
+            ps = conn.prepareStatement(PROXY_TABLE_2_0);
+            ps.executeUpdate();
+            ps.close();
 //
             ps = conn.prepareStatement(INSERT_PROXY_TABLE_1);
             int i = ps.executeUpdate();
@@ -160,6 +169,11 @@ public class EmbeddedGFXDForTests {
                 LOGGER.info("Row inserted to DataProxy_1 table");
 
 
+            ps = conn.prepareStatement(INSERT_PROXY_TABLE_2);
+            i = ps.executeUpdate();
+            ps.close();
+            if(i>0)
+                LOGGER.info("Row inserted to DataProxy_2 table");
 
         }finally{
             if(conn!=null) conn.close();
@@ -182,7 +196,8 @@ public class EmbeddedGFXDForTests {
         serverProps.setProperty("persist-dd", "false");
         serverProps.setProperty("sys-disk-dir",gfxdDir);
         serverProps.setProperty("server-groups","poc");
-        serverProps.setProperty("proxyTableName","DataProxy_1");
+
+        System.setProperty("proxyTableName","DataProxy_1,DataProxy_2");
 
         FabricServer server = FabricServiceManager.getFabricServerInstance();
 
