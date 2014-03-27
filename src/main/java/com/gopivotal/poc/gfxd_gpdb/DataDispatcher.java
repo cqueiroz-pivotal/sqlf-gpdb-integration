@@ -39,8 +39,8 @@ public class DataDispatcher implements EventCallback {
     private int rr = 1;
 //    private double counter0,counter1, counter, counter2;
 
-    private final List<String> tableNames = new ArrayList<String>(10);
-
+//    private final List<String> tableNames = new ArrayList<String>(10);
+    private String updateSQL = "";
 
 //    private void processStats(long processingTime){
 //
@@ -96,8 +96,8 @@ public class DataDispatcher implements EventCallback {
     private void processRow(ResultSet rs, Object pk, int numCols) {
 
 
-        int proxyLocation;
-        String tableName = "";
+//        int proxyLocation;
+//        String tableName = "";
         PreparedStatement pstm = null;
         Connection conn = null;
         final StringBuilder sb = new StringBuilder();
@@ -111,16 +111,13 @@ public class DataDispatcher implements EventCallback {
 
             conn = ds.getConnection();
 
-            proxyLocation = ((pk.hashCode() & 0x7fffffff) % Integer.parseInt(p.getProperty("numproxies"))) + 1;
-
-            pstm = conn.prepareStatement(tableNames.get(proxyLocation - 1));
+            pstm = conn.prepareStatement(updateSQL);
             pstm.setString(1, sb.toString());
             pstm.executeUpdate();
 
 
-
         }catch(SQLException e){
-            LOGGER.error("Error processing row: updating proxy table: " + tableName ,e);
+            LOGGER.error("Error processing row: updating proxy table: " + updateSQL ,e);
 
         }finally{
 
@@ -165,25 +162,26 @@ public class DataDispatcher implements EventCallback {
             HikariConfig config = new HikariConfig();
             config.setMaximumPoolSize(Integer.parseInt(p.getProperty("maxConn")));
             config.setMinimumPoolSize(Integer.parseInt(p.getProperty("minConn")));
-
             config.setDataSourceClassName("com.pivotal.gemfirexd.internal.jdbc.EmbeddedDataSource");
-//            config.addDataSourceProperty("url",p.getProperty("connectionURL"));
             config.addDataSourceProperty("user", "app");
             config.addDataSourceProperty("password", "app");
-
             ds = new HikariDataSource(config);
 
             LOGGER.info("HikariCP Connection pool created");
 
 
-            int num = Integer.parseInt(p.getProperty("numproxies"));
-            for(int i = 1 ; i <=num ; i++){
-                StringBuilder sbs = new StringBuilder();
-                tableNames.add(sbs.append("update ").append(p.getProperty("proxyTablePrefix")).append("_").
-                        append(i).append(" set value=? where k=1").toString());
+//            int num = Integer.parseInt(p.getProperty("numproxies"));
+//            for(int i = 1 ; i <=num ; i++){
+//
+//
+//            }
 
-            }
-            LOGGER.info("Table names created");
+            StringBuilder sbs = new StringBuilder();
+
+            updateSQL = sbs.append("update ").append(System.getProperty("proxyTableName")).
+                    append(" set value=? where k=1").toString();
+
+            LOGGER.info("UpdateSQL created");
 
 
         } catch (IOException e) {
