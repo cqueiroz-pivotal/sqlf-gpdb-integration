@@ -1,10 +1,6 @@
 package com.gopivotal.poc.gfxd_gpdb;
 
-import com.jolbox.bonecp.BoneCP;
-import com.jolbox.bonecp.BoneCPConfig;
 
-
-import com.pivotal.gemfirexd.callbacks.DBSynchronizer;
 import com.pivotal.gemfirexd.callbacks.Event;
 import com.pivotal.gemfirexd.callbacks.EventCallback;
 import com.zaxxer.hikari.HikariConfig;
@@ -20,6 +16,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
 /**
  * Code based on Charlie Black demo code.
@@ -37,6 +34,8 @@ public class DataDispatcher implements EventCallback {
 
 
     private final List<String> tableNamesList = new ArrayList<String>(20);
+
+    private final Random rnd = new Random(System.currentTimeMillis());
 
     @Override
     public void onEvent(Event event) throws SQLException {
@@ -77,7 +76,7 @@ public class DataDispatcher implements EventCallback {
             sb.deleteCharAt(sb.length() -1);
 
             conn = ds.getConnection();
-            updateSQL = tableNamesList.get((int)System.currentTimeMillis() % tableNamesList.size());
+            updateSQL = tableNamesList.get(rnd.nextInt(tableNamesList.size()));
             pstm = conn.prepareStatement(updateSQL);
             pstm.setString(1, sb.toString());
             pstm.executeUpdate();
