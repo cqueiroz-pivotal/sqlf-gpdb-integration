@@ -20,7 +20,6 @@ import java.util.Properties;
 /**
  * Code based on Charlie Black demo code.
  * @author cq
- * modified by @author Wang Yi
  * Date: 11/03/2014
  * Time: 2:38 AM
  */
@@ -41,14 +40,13 @@ public class DataBatchListener implements AsyncEventListener {
     @Override
     public boolean processEvents(List<Event> events) {
 
-//        long startTime = System.currentTimeMillis();
+
 
         if (integrate) startLoadingData();
 
         try {
 
             pipeWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(p.getProperty("pipeFileLocation"))));
-//            LOGGER.info("pipeWriter started!!");
 
         } catch (FileNotFoundException e) {
             LOGGER.error("Error opening pipe: ", e);
@@ -56,7 +54,7 @@ public class DataBatchListener implements AsyncEventListener {
         }
 
         try {
-//            int i = 0;
+
             for (Event event : events) {
                 ResultSet rs = event.getNewRowsAsResultSet();
                 switch (event.getType()) {
@@ -68,8 +66,6 @@ public class DataBatchListener implements AsyncEventListener {
                             String data = rs.getString(1);
                             pipeWriter.write(data);
                             pipeWriter.newLine();
-//                            i++;
-                            // To clear the main table data
 
                         } catch (SQLException e) {
                             LOGGER.error("Error doing single Insert/Update: ", e);
@@ -91,8 +87,6 @@ public class DataBatchListener implements AsyncEventListener {
 
             pipeWriter.flush();
             pipeWriter.close();
-
-//            LOGGER.info("Events flushed to pipe: " + i);
             return true;
 
         } catch (IOException e) {
@@ -103,7 +97,6 @@ public class DataBatchListener implements AsyncEventListener {
 
         return false;
     }
-
 
 
     /**
@@ -204,8 +197,6 @@ public class DataBatchListener implements AsyncEventListener {
 
     @Override
     public void start() {
-
-
 
     }
 }

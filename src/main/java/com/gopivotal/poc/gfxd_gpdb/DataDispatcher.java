@@ -133,9 +133,6 @@ public class DataDispatcher implements EventCallback {
 
             LOGGER.info("HikariCP Connection pool created");
 
-
-
-
             String[] tableNames = System.getProperty("proxyTableName").split(",");
 
             for(String name : tableNames){
@@ -144,8 +141,6 @@ public class DataDispatcher implements EventCallback {
                         append(" set value=? where k=1").toString());
 
             }
-
-
 
             LOGGER.info("UpdateSQLs created: " + tableNamesList.size());
 
